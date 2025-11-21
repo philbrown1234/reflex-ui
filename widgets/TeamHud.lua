@@ -67,7 +67,8 @@ local function sortBySelf(a, b)
     local localplayer = getPlayer();
     if (a.name == localplayer.name) then
         ascore = ascore * 9999999;
-    elseif (b.name == localplayer.name) then
+    end
+    if (b.name == localplayer.name) then
         bscore = bscore * 9999999;
     end
 
