@@ -184,7 +184,9 @@ end
 function Timer:draw()
 
     -- Early out if HUD shouldn't be shown.
-    if not shouldShowHUD() then return end;
+	local optargs = {};
+	optargs.showWhenDead = true;
+    if not shouldShowHUD(optargs) then return end;
 	
 	local timeColor, timeFrameColor, timeText, timeSize = self:GetTimeColorAndText();
 	local deltaColor, deltaFrameColor, deltaText = self:GetDeltaColorAndText();
