@@ -21,6 +21,7 @@ ChatLog =
 	lastLogId = -1;
 	history = {};
 	historyCount = 0;
+	historyPosition = 1;
 };
 registerWidget("ChatLog");
 
@@ -103,7 +104,7 @@ function ChatLog:draw()
 	local shouldBeepDrop = false;
 	local cursorFlashPeriod = 0.25;
 	local chatStayTime = 9;
-	local historyLength = 20;
+	local historyLength = 100;
 	
 	local col = Color(230, 230, 230);
 	local colTeam = Color(126, 204, 255);
@@ -259,6 +260,16 @@ function ChatLog:draw()
 			end
 		end
 	end
+
+	-- chat scrolling
+	if self.historyPosition ~= 1 and say.hoverAmount < 1 then
+		-- reset position after closing chat
+		self.historyPosition = 1;
+	elseif say.hoverAmount > 0 then
+		self.historyPosition = self.historyPosition + say.mouseWheel;
+		if self.historyPosition < 1 then self.historyPosition = 1
+		elseif self.historyPosition > self.historyCount then self.historyPosition = self.historyCount end
+	end
 			
 	-- parse only new log entries
 	for i, logEntry in pairs(log) do
@@ -280,6 +291,8 @@ function ChatLog:draw()
 
 	-- history
 	for i, logEntry in pairs(self.history) do
+		if i < self.historyPosition then goto continue end
+
 		logEntry.age = logEntry.age + deltaTimeRaw; -- need to update the age since this is a copied entry
 		local age = logEntry.age;
 
@@ -379,6 +392,7 @@ function ChatLog:draw()
 		if shouldBold == true then
 			nvgRestore();
 		end
+		::continue::
 	end
 	
 	if shouldBeep then playSound("internal/misc/chat") end
