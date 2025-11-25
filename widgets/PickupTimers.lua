@@ -47,7 +47,9 @@ PickupVis[PICKUP_TYPE_FLAGTEAMB].color = Color(0,0,255);
 function PickupTimers:draw()
 	
     -- Early out if HUD shouldn't be shown.
-    if not shouldShowHUD() then return end;
+	local optargs = {};
+	optargs.showWhenDead = true;
+    if not shouldShowHUD(optargs) then return end;
 
 	-- update flag colours from team colours
 	PickupVis[PICKUP_TYPE_FLAGTEAMA].color = teamColors[1];
