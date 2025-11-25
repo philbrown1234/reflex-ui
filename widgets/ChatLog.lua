@@ -18,6 +18,10 @@ ChatLog =
 
 	cursorFlash = 0;
 	entryOffsetX = 0;
+	lastLogId = -1;
+	history = {};
+	historyCount = 0;
+	historyPosition = 1;
 };
 registerWidget("ChatLog");
 
@@ -99,22 +103,19 @@ function ChatLog:draw()
 	local shouldBeep = false;
 	local shouldBeepDrop = false;
 	local cursorFlashPeriod = 0.25;
+	local chatStayTime = 9;
+	local historyLength = 100;
 	
 	local col = Color(230, 230, 230);
 	local colTeam = Color(126, 204, 255);
 	local colSpec = Color(255, 204, 126);
 	local colParty = Color(127, 255, 50);
 	local borderPad = 10;
-	local logCount = 0;
 	local x = 0;
 	local y = 0;
 	local w = 800;
 	local h = 196;
 	local bordery = y+12;
-
-	for k, v in pairs(log) do
-		logCount = logCount + 1;
-	end
 
 	-- no chatlog in menu replay
 	if replayName == "menu" then
@@ -259,23 +260,56 @@ function ChatLog:draw()
 			end
 		end
 	end
+
+	-- chat scrolling
+	if self.historyPosition ~= 1 and say.hoverAmount < 1 then
+		-- reset position after closing chat
+		self.historyPosition = 1;
+	elseif say.hoverAmount > 0 then
+		self.historyPosition = self.historyPosition + say.mouseWheel;
+		if self.historyPosition < 1 then self.historyPosition = 1
+		elseif self.historyPosition > self.historyCount then self.historyPosition = self.historyCount end
+	end
 			
+	-- parse only new log entries
+	for i, logEntry in pairs(log) do
+		local id = logEntry.id;
+		if id > self.lastLogId then
+			logEntry.age = -deltaTimeRaw;
+			table.insert(self.history, 1, logEntry);
+			if self.historyCount >= historyLength then
+				table.remove(self.history, self.historyCount + 1); -- remove last entry from history
+			else
+				self.historyCount = self.historyCount + 1;
+			end
+			self.lastLogId = id;
+		end
+	end
+
 	y = y - 34;
 	nvgScissor(x, bordery - h, w, h);
-	
+
 	-- history
-	for i = 1, logCount do
-		local logEntry = log[i];
-		local intensity = clamp(1 - (logEntry.age - 9), 0, 1); -- fade out from 9->10 seconds
+	for i, logEntry in pairs(self.history) do
+		if i < self.historyPosition then goto continue end
 
+		logEntry.age = logEntry.age + deltaTimeRaw; -- need to update the age since this is a copied entry
+		local age = logEntry.age;
+
+		local intensity = clamp(1 - (age - chatStayTime), 0, 1); -- fade out from 9->10 seconds
 		local text = nil;
-
 		local shouldBold = false;
+
+		-- force show past messages when player is typing
+		if say.hoverAmount > 0 then
+			intensity = 1;
+			logEntry.age = 0;
+		end
 
 		if logEntry.type == LOG_TYPE_CHATMESSAGE then
 			local mod = "";
 
-			col = Color(239, 237, 255, 255*intensity);
+			col = Color(239, 237, 255, 255);
 			if logEntry.chatType == LOG_CHATTYPE_TEAM then
 				col = colTeam;
 				mod = " (team)";
@@ -348,7 +382,7 @@ function ChatLog:draw()
 
 				-- foreground
 				nvgFontBlur(0);
-				nvgFillColor(col);
+				nvgFillColor(Color(col.r, col.g, col.b, col.a*intensity));
 				nvgText(x, y, lineText);
 				
 				y = y - 24;
@@ -358,6 +392,7 @@ function ChatLog:draw()
 		if shouldBold == true then
 			nvgRestore();
 		end
+		::continue::
 	end
 	
 	if shouldBeep then playSound("internal/misc/chat") end
