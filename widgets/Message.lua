@@ -56,7 +56,7 @@ function Message:draw()
 	local text = self.currentMessage;
 	function split(str, delim)
 		local result,pat,lastPos = {},"(.-)" .. delim .. "()",1
-		for part, pos in string.gfind(str, pat) do
+		for part, pos in string.gmatch(str, pat) do
 			table.insert(result, part); lastPos = pos
 		end
 		table.insert(result, string.sub(str, lastPos))
