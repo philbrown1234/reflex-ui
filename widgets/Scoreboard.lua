@@ -2248,13 +2248,20 @@ function Scoreboard:drawTrainingCard(x, y, w, h, isRight)
 		consolePerformCommand("callvote restart");
 	end
 
-	-- return to menu
+	-- next mission / return to menu
+	local nextMap = getNextTrainingMap(world.mapName);
 	if world.gameState == GAME_STATE_GAMEOVER then
 		-- go red at end of game
 		optargs.bgcoltype = nil;
 	end
-	if ui2Button("RETURN TO MENU", x+w*(3/4)-100-20, iy+padx, 220, 30, optargs) then
-		consolePerformCommand("disconnect");
+	if nextMap ~= nil then
+		if ui2Button("NEXT MAP", x+w*(3/4)-100-20, iy+padx, 220, 30, optargs) then
+			consolePerformCommand("map " .. nextMap.map);
+		end
+	else
+		if ui2Button("RETURN TO MENU", x+w*(3/4)-100-20, iy+padx, 220, 30, optargs) then
+			consolePerformCommand("disconnect");
+		end
 	end
 	optargs.bgcoltype = nil;
 	iy = iy + 30;
