@@ -56,8 +56,7 @@ function MapAutoSave:draw()
 
     local player = getPlayer();
 
-
-    if player.state ~= PLAYER_STATE_EDITOR then
+    if player == nil or player.state ~= PLAYER_STATE_EDITOR then
     	return
     end
 
