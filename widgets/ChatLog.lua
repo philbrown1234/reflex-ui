@@ -362,6 +362,18 @@ function ChatLog:draw()
 			end
 
 			shouldBold = true;
+
+		elseif logEntry.type == LOG_TYPE_ACTIVITY then
+			col = Color(50, 200, 50);
+			text = logEntry.activityMessage;
+
+			local id = logEntry.id;
+			if id > lastBeepId then
+				lastBeepId = id;
+				shouldBeepDrop = true;
+			end
+
+			shouldBold = true;
 		end
 
 		if shouldBold == true then
